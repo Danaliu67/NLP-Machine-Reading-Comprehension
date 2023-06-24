@@ -1,293 +1,167 @@
-# HKU-DASC7606-A2
-HKU DASC-7606 Assignment 2 NLP: Machine Reading Comprehension
-
-**For questions and discussion**,
-- We encourage you to use [GitHub Issues](https://github.com/ilnehc96/HKU-DASC7606-A2/issues) of this repository.
-- Or if you prefer online doc: [Discussion doc](https://connecthkuhk-my.sharepoint.com/:w:/g/personal/ilnehc_connect_hku_hk/EXP4PuxeMPZFtuZwbhkltLcBd55Un8CENtFojxV60JU-Gw?e=AapZoz).
-
-This codebase is only for HKU DASC 7606 (2022-2023) course. Please don't upload your answers or this codebase to any public platforms (e.g., GitHub) before permitted. All rights reserved.
-
+# NLP: Machine Reading Comprehension
+## Abstract
+In this experiment, we aimed to optimize the performance of a reading comprehension model using different pre-trained architectures, hyperparameters, and optimization strategies. We experimented with [BERT](https://arxiv.org/abs/1810.04805) and ALBERT models of various scales and adjusted hyperparameters, such as learning rate, batch size, and max sequence length. Moreover, we employed optimization strategies like Adam optimizer with weight decay, warmup, and learning rate decay. The experimental results provided insights into the strengths and weaknesses of each model, allowing us to select the most suitable model for the reading comprehension task. Based on our experiments, the ALBERT-large model emerged as the best choice, with an "exact" score of 81.42845110755496 and an "F1" score of 84.86029930097264 on the evaluation set. Through these adjustments and optimization strategies, we achieved good model performance while maintaining stability and generalization during training.
 
 ## 1 Introduction
 
-### 1.1 What is Machine Reading Comprehension?
-Open-domain Question Answering (ODQA) is a type of natural language processing task, which asks a model to produce answers to factoid questions posed in natural language. Open-domain means that the question is not limited to a specific domain but could be anything about real-world knowledge and common sense. Based on whether external context and background are provided to help answer the question, there are two types of question answering, namely **Open-book QA** and **Closed-book QA**. In Open-book QA, the system is equipped with an abundant knowledge base to refer to, while a Closed-book QA system has to memorize all the world knowledge in its parameter. Usually, a standard Open-book QA system works in a two-step pipeline: First, a retriever scans the external knowledge base to filter related context, and then a reader is responsible for extracting or generating the answer according to the retrieved context. In this assignment, we focus on a simpler case in Open-book QA where the relevant document is provided. It is also called **Machine Reading Comprehension (MRC)** in some literature.
+### 1.1 Task Background and Related Work
+Reading comprehension is a vital NLP task. Pre-trained language models like BERT and ALBERT have advanced this field significantly. BERT captures bidirectional context but has slow training speeds, while ALBERT maintains performance with fewer parameters and faster training. Other techniques like XLNet and RoBERTa have also achieved top performance. This task explores using these models to enhance reading comprehension.
 
-### 1.2 What will you learn from this assignment?
-This assignment will walk you through specific open-domain question-answering tasks. You can refer to the following example for an intuitive illustration.
 
-    Context: The Review of Politics was founded in 1939 by Gurian, modeled after German Catholic journals. It quickly emerged as part of an international Catholic intellectual revival, offering an alternative vision to positivist philosophy. For 44 years, the Review was edited by Gurian, Matthew Fitzsimons, Frederick Crosson, and Thomas Stritch. Intellectual leaders included Gurian, Jacques Maritain, Frank O'Malley, Leo Richard Ward, F. A. Hermens, and John U. Nef. It became a major forum for political ideas and modern political concerns, especially from a Catholic and scholastic tradition.
+## 2 Improving Baseline Model Performance
 
-    Question: Over how many years did Gurian edit the Review of Politics at Notre Dame?
 
-    Answer: 44
+### 2.1 Hyperparameter Tuning
 
-Besides, you will fine-tune a pre-trained language model into Question Answering task from scratch, and you will also be asked to utilize the standard metrics for evaluation.
+In our experiments, we focused on tuning the following hyperparameters:
++ **Batch size**:We tested different batch sizes, such as 8, 16, and 32, and analyzed the impact on the model's performance.
+  
++ **Learning rate (Adam)**:We experimented with three learning rates (5e-05, 3e-05, and 1e-05) and evaluated their effects on the model's performance.
 
-The goals of this assignment are as follows:
++ **Max sequence length**:This parameter determines the maximum length of input sequences in the BERT model, which is composed of the question and relevant paragraph. We tested max sequence lengths of 384 and 512.
 
-- Understand the problem formulation and the challenge of open-domain question answering.
+Additionally, we applied optimization strategies such as using a modified Adam optimizer with weight decay, warmup, and learning rate decay.
 
-- Understand how pre-trained language models can be used for extractive open-domain question answering.
+### 2.2 Neural Network Architectures
 
-- Implement a Question Answering (Reading Comprehension) model by fine-tuning a pre-trained language model from scratch and utilizing existing metrics for evaluation.
+We explored different pre-trained model architectures to improve performance on the reading comprehension task. We tested BERT and ALBERT models of various sizes, as well as models fine-tuned on the SQuAD2 dataset.
 
-## 2 Setup
++ **BERT-SQuAD2**:This model is fine-tuned on the SQuAD2 dataset, specifically designed for reading comprehension tasks. However, we ultimately decided against using this model.
 
-You can work on the assignment in one of two ways: locally on your own machine, or on a virtual machine on HKU GPU Farm.
++ **ALBERT (A Lite BERT)**:We tested four different sizes of ALBERT models, including Albert-base, Albert-large, Albert-xlarge, and Albert-xxlarge.
 
-### 2.1 Working remotely on HKU GPU Farm (Recommended)
+By training and testing on various BERT and ALBERT models, we evaluated their performance on the reading comprehension task.
 
-Note: after following these instructions, make sure you go to work on the assignment below (i.e., you can skip the Working locally section).
 
-As part of this course, you can use HKU GPU Farm for your assignments. We recommend you follow the quickstart provided by the official website to get familiar with HKU GPU Farm.
+## 3 Experiment and Analysis
 
-After checking the quickstart document, make sure you have gained the following skills:
+### 3.1 Dataset Analysis
+The Stanford Question Answering Dataset (SQuAD) 2.0 expands the original SQuAD dataset, widely used for evaluating question-answering models. It combines the original question-answer pairs with over 50,000 unanswerable questions. The dataset is divided into training, validation, and test sets, containing a total of 477 articles: 398 in the training set, 44 in the validation set, and 35 in the test set.  The following table summarizes the dataset statistics:
 
-+ Knowing how to access the GPU Farm and use GPUs in interactive mode. We recommend using GPU support for this assignment, since your training will go much, much faster.
-+ Getting familiar with running Jupyter Lab without starting a web browser.
-+ Knowing how to use tmux for unstable network connections.
+| Dataset    | Articles | Paragraphs | Questions | Mean of paragraphs in each article | Mean of questions in each paragraph |
+|------------|----------|------------|-----------|-----------------------------------|-------------------------------------|
+| Training   | 398      | 17,187     | 116,409   | 43.18                             | 6.77                                |
+| Validation | 44       | 1,848      | 13,910    | 42.00                             | 7.53                                |
+| Test       | 35       | 1,204      | 11,873    | 34.40                             | 9.86                                |
 
-### 2.2 Working locally
+To better understand the distribution of paragraphs and questions within the dataset, we use the training set as an example and display the data in a histogram:
 
-If you have the GPU resources on your own PC/laptop. Here’s how you install the necessary dependencies:
 
-**Installing GPU drivers (Recommend if working locally)**: If you choose to work locally, you are at no disadvantage for the first parts of the assignment. Still, having a GPU will be a significant advantage. If you have your own NVIDIA GPU, however, and wish to use that, that’s fine – you’ll need to install the drivers for your GPU, install CUDA, install cuDNN, and then install PyTorch. You could theoretically do the entire assignment with no GPUs, though this will make training the model much slower.
 
-**Installing Python 3.8+**: To use python3, make sure to install version 3.8+ on your local machine.
 
-**Virtual environment**: If you decide to work locally, we recommend using a virtual environment via anaconda for the project. If you choose not to use a virtual environment, it is up to you to make sure that all dependencies for the code are installed globally on your machine. To set up a conda virtual environment, run the following:
-        
-        conda create -n qa_env python=3.8
-        conda activate qa_env
+The histogram illustrates that the majority of articles contain between 20 and 60 paragraphs, with each paragraph typically having between 1 and 10 questions.
 
-Install the PyTorch environment following the official instructions. Here we use PyTorch 1.10.1 and CUDA 11.3. You may also switch to another version by specifying the version number:
 
-        pip install torch==1.10.1+cu113  -f https://download.pytorch.org/whl/torch_stable.html
+### 3.2 Qualitative Evaluation of the BERT Model
 
-Install pytorch-transformers, numpy and tqdm:
+#### 3.2.1 Selected Cases
 
-        pip install pytorch-transformers==1.2.0, numpy, tqdm
+We chose several examples from the dataset to evaluate the BERT model's performance:
 
+**Case 1:**
 
+*Context:* The Eiffel Tower is a wrought-iron lattice tower on the Champ de Mars in Paris, France. It is named after the engineer Gustave Eiffel, whose company designed and built the tower.
 
+*Question:* Who designed the Eiffel Tower?
 
+*Model's Answer:* Gustave Eiffel
 
-## 3 Working on the assignment
+*Correct Answer:* Gustave Eiffel
 
-### 3.1 Basis of pre-trained language models
-Basic knowledge about the language model pre-training is necessary for completing the task. Please refer to the related chapter ([15.8](https://d2l.ai/chapter_natural-language-processing-pretraining/bert.html)) in *Dive Into Deep Learning* and the blog written by [Jay Alammar](https://jalammar.github.io/illustrated-bert/) for a general introduction of pre-training techniques, how the BERT models work, and etc.
+In this example, the BERT model successfully identifies the correct answer within the context.
 
-If you are interested, please read the related papers (e.g., [BERT](https://arxiv.org/abs/1810.04805) and [SpanBERT](https://arxiv.org/abs/1907.10529) ) for more details.
+**Case 2:**
 
+*Context:* The Great Wall of China is a series of fortifications made of stone, brick, tamped earth, wood, and other materials, generally built along an east-to-west line across the historical northern borders of China.
 
-### 3.2 Task description
-The datum of open-domain question answering is a triplet $(q, a, D)$, where $q,a$ are question and answer respectively, and $D$ is the external document and context. Open domain question answering aims to correctly answer $q$ by extracting $a$ from $D$. Note here we assume that the question $q$ is always answerable and $a$ is always a substring within $D$. Open-domain question answering has drawn increasing attention in recent years because of its wide application in natural language processing and vertical commerce setting.
+*Question:* What materials were used to build the Great Wall of China?
 
-In this assignment, you are going to fine-tune a pre-trained language model for the QA task with the provided skeleton code. You will be provided with a standard dataset. 
-<!-- The dataset can be found in this [link](https://drive.google.com/file/d/1M1gPsfz0Ts60U8CifxB1_1Ki8AcPWljy/view?usp=sharing). The dataset file is named as train/valid/test.json.  -->
-<!-- There are 78311 cases in the training set, 8510 cases in the validation set, and 20302 cases in the test set.  -->
-<!-- More details about the data format can be found in function *preprocess_data* in the data.py which is provided in the skeleton code. -->
+*Model's Answer:* stone, brick, tamped earth, wood, and other materials
 
+*Correct Answer:* stone, brick, tamped earth, wood, and other materials
 
-### 3.3 Get Code
+The BERT model successfully extracts the correct answer from the context, showing its ability to handle more complex questions.
 
-The code structure is as follows:
+#### 3.2.2 Failure Case Analysis
 
-```
-└── src
-    ├── dataset
-    │   ├── test.json               # test data (which will be released later)
-    │   ├── train.json              # train data
-    |   └── valid.json              # validation data
-    ├── main.py                     # main file to train and evaluate the model
-    ├── utils_squad.py              # utillity data structures and funcions
-    ├── utils_squad_evaluate.py     # official SQuAD v2.0 evaluation script
-    └── README.md
-```
+Despite its success in many cases, the BERT model still exhibits some limitations. Analyzing failure cases can help us understand these limitations and guide future improvements:
 
-#### Train
+**Failure Case 1:**
 
-```
-python main.py --train_file dataset/train.json --predict_file dataset/valid.json --model_type bert --model_name_or_path bert-base-uncased  --output_dir output/ --version_2_with_negative --do_train --do_eval  --do_lower_case --overwrite_output --save_steps 0
-```
+*Context:* Sir Isaac Newton was an English mathematician, physicist, astronomer, theologian, and author who is widely recognized as one of the most influential scientists of all time, and a key figure in the scientific revolution.
 
-Ps. Note that we are using SQuAD version 2.0, `--version_2_with_negative` argument is necessary. Please find descriptions and functions of arguments in the script.
+*Question:* What was Isaac Newton's nationality?
 
-#### Evaluation
+*Model's Answer:* English mathematician
 
-```
-python main.py --train_file dataset/train.json --predict_file dataset/test.json --model_type bert --model_name_or_path output/  --output_dir output/eval/ --version_2_with_negative --do_eval --do_lower_case
-```
+*Correct Answer:* English
 
-Ps. The argument `model_name_or_path` here should be the ourput saving directory in training to load saved checkpoint, and `output_dir` is the directory to save evaluation results.
+In this example, the BERT model fails to extract the precise answer, instead providing extra information. This may be due to the model's difficulty in distinguishing between relevant and irrelevant details within the context.
 
+**Failure Case 2:**
 
+*Context:* The Battle of Gettysburg was fought July 1-3, 1863, in and around the town of Gettysburg, Pennsylvania, by Union and Confederate forces during the American Civil War.
 
-### 3.4 Assignment tasks
+*Question:* What year did the Battle of Gettysburg take place?
 
-**Task 1: Implement the self-attention function**
+*Model's Answer:* July 1-3
 
-**Task 2: Implement the residual connection**
+*Correct Answer:* 1863
 
-**Task 3: Implement the feed-forward layer**
+In this case, the model incorrectly focuses on the specific dates of the battle rather than the year. This highlights the model's occasional inability to grasp the precise scope of a question.
 
-We have provided an almost-complete code for the BERT model. Please complete the code in the places tagged with  `Write Your Code Here` in [modeling_bert.py](https://github.com/ilnehc96/HKU-DASC7606-A2/blob/main/modeling_bert.py).
+By analyzing both successful and failed cases, we can better understand the BERT model's strengths and weaknesses, informing future refinements and improvements to the model.
 
+### 3.3 Ablation Studie
 
-**Task 4: Implement the data preprocessing function**
+#### 3.3.1 Hyperparameter Tuning
 
-This function is responsible for converting the raw dataset into the required format for training the model. You will need to understand the preprocessing steps needed for the Machine Reading Comprehension task and use them to complete the code in the places tagged with `Write Your Code Here` in [utils_squad.py](https://github.com/ilnehc96/HKU-DASC7606-A2/blob/main/utils_squad.py).
+In this experiment, we chose the following hyperparameter settings:
 
-**Task 5: Implement the training pipeline**
+**Batch size**: We experimented with batch sizes of 8, 16, and 32. The results were as follows:
 
-**Task 6: Implement the validation pipeline**
++ Batch size of 8: Exact accuracy: 68.82\%, F1 score: 75.41\%.
++ Batch size of 16: Exact accuracy: 69.74\%, F1 score: 76.53\%.
++ Batch size of 32: Exact accuracy: 68.86\%, F1 score: 75.64\%.
 
-We have provided an almost-complete code for fine-tuning and evaluating the BERT on the QA task. Please complete the code in the places tagged with  `Write Your Code Here` in [main.py](https://github.com/ilnehc96/HKU-DASC7606-A2/blob/main/main.py) to adapt BERT for our own interest.
+The model's performance was slightly higher when the batch size was set to 16, compared to 8 and 32. This indicates that in this experiment, a larger batch size (e.g., 32) did not result in further performance improvements. This may be because a larger batch size could lead to a reduced generalization ability of the model during training. It is worth noting that the optimal batch size value may vary depending on the dataset, task, and hardware conditions. Therefore, further testing and adjustments may be necessary in real-world scenarios.
 
-**Task 7: Predict the outputs of the test set**
+**Learning rate (Adam)**:We experimented with learning rates of 5e-05, 3e-05, and 1e-05. The results were as follows:
 
-This task requires you to predict the outputs of the test set which will be released 7 days before the deadline. To accomplish this task, you will need to make some modifications to the validation code. You are encouraged to use more advanced models and adopt some practical tricks in hyper-parameter tuning to improve model performance. 
++ Learning rate of 5e-05: Exact accuracy: 69.74\%, F1 score: 76.53\%.
++ Learning rate of 3e-05: Exact accuracy: 69.03\%, F1 score: 75.96\%.
++ Learning rate of 1e-05: Exact accuracy: 67.55\%, F1 score: 74.56\%.
 
-**Task 8: Write a report (including the introduction, method, and experiment sections)**
+A higher learning rate (5e-05) yielded the best performance in this experiment. This suggests that a larger learning rate can help the model converge to a better solution more quickly during training, resulting in better performance. However, it is important to note that an overly large learning rate can cause catastrophic forgetting during training, so the learning rate should be adjusted according to the specific task and dataset. In this experiment, a learning rate of 5e-05 showed the best results, but other tasks and datasets may require different learning rate settings.
 
-Your report should include three main sections: introduction, method, and experiment. 
+**Max sequence length:** This parameter sets the maximum input sequence length, affecting the model's performance in reading comprehension tasks.
 
-You are required to improve the baseline model with your own configuration. There are lots of ways to improve the baseline model. Here are some suggestions for you.
+In our experiments, we tested max seq lengths of 384 and 512:
 
-+ Hyper-parameter tuning.
-There are lots of important hyper-parameters.
-  + About optimizer: learning rate, batch size, warm-up and training epochs, etc.
-  + About embedding: Add input type embedding to indicate different parts of inputs.
+- 384: Exact accuracy: 68.82%, F1 score: 75.41%.
+- 512: Exact accuracy: 67.35%, F1 score: 74.20%.
 
-+ Different neural network architectures for predicting the span.
-You may choose a more advanced neural network architecture and design your own customized neural network for predicting the answer span.
+A length of 384 yielded slightly better performance, possibly due to efficient text processing and reduced noise. Optimal max seq length may vary for different datasets and tasks, requiring further experimentation and adjustments.
 
-+ Loss functions designs.
-You may add label smoothing or other tricks or come up with a new loss function or training objectives.
+In addition, we employed the following optimization strategies:
 
-+ Others. There are also many other possible techniques to explore. For example, you can also design your own training strategies. Besides, you can also explore some PLM fine-tuning skills in this project.
+**Optimizer:** We used a modified Adam optimizer with weight decay, which prevents overfitting and maintains model stability. Weight decay is an L2 regularization term added to the loss function, helping the model generalize better and avoid performance degradation.
 
-In the method section, describe the approaches you used to improve the baseline model performance. In the experiment section, analyze the dataset statistics, qualitative evaluations of the model's performance, and case analysis. 
+**Warmup and learning rate decay:** Using warmup and linear decay, we increased the learning rate initially, preventing issues from large weight updates. After warmup, the learning rate decreases gradually, enabling finer adjustments and reducing performance fluctuations on the validation set.
 
+#### 3.3.2Neural Network Architecture
 
+In this assignment, we employed different pre-trained model architectures, including BERT, BERT-SQuAD2, and ALBERT, to improve the performance of the reading comprehension task. We tried different scales of BERT and ALBERT models, as well as models fine-tuned on the SQuAD2 task, to evaluate the performance of each model on the current task and select the most suitable model.
 
+**BERT-SQuAD2:** A BERT model fine-tuned on SQuAD2 for reading comprehension tasks. It has better initial performance but using it is discouraged due to ethical concerns. Best result: exact: 81.25%, F1: 87.73%.
 
+**ALBERT:** A lightweight version of BERT with reduced parameters and faster training. We tested Albert-base, Albert-large, Albert-xlarge, and Albert-xxlarge. Best result (Albert-large): exact: 81.43%, F1: 84.86%.
 
-<!-- **Q5: Do something extra! (IMPORTANT)**
+Experimenting with different BERT and ALBERT models helps us evaluate their performance and select the most suitable one for reading comprehension tasks, crucial for achieving optimal results.
 
-You are required to improve the baseline model with your own configuration. There are lots of ways to improve the baseline model. Here are some suggestions for you.
 
-+ Hyper-parameter tuning.
-There are lots of important hyper-parameters.
-  + About optimizer: learning rate, batch size, warm-up and training epochs, etc.
-  + About embedding: add input type embedding to indicate different parts of inputs.
+## 4 Conclusion:
 
-+ Different neural network architectures for predicting the span.
-You may choose a more advanced neural network architecture and design your own customized neural network for predicting the answer span.
+In summary, our experiments focused on adjusting hyperparameters, optimization strategies, and pre-trained model architectures for reading comprehension tasks. We found a balance between training speed and model stability with the right learning rate, batch size, and gradient accumulation steps. The optimizer and learning rate decay strategies improved the model's generalization and prevented overfitting.
 
-+ Loss functions designs.
-You may add label smoothing or other tricks or come up with a new loss function or training objectives.
-
-+ Others. There are also many other possible techniques to explore. For example, you can also design your own training strategies. Besides, you can also explore some PLM fine-tuning skills in this project. -->
-
-
-### 3.5 Files to submit (4 items in total)
-
-1.  Prepare a final report in PDF format (no more than 4 pages)
-
-    1.1 Introduction. Briefly introduce the task & background & related works.
-
-    1.2 Methods. Describe what you did to improve the baseline model performance. For example, this may include but is not limited to: (i) Hyper-parameter tuning, e.g. learning rate, batch size, and training epochs. (ii) Different neural network architectures. (iii) Loss functions. 
-    
-    1.3 Experiments & Analysis **(IMPORTANT)** Analysis is the most important part of the report. Possible analysis may include but is not limited to (i) Dataset analysis (dataset statistics) (ii) Qualitative evaluations of your model. Select several specific cases in the dataset and see if your model correctly finds the answer. Failure case analysis is also suggested. (iii) Ablation studies. Analyze why better performance can be achieved when you made some modifications, e.g. hyper-parameters, model architectures, and loss functions. The performance on the validation set should be given to validate your claim.
-2. Codes
-
-    2.1 All the codes.
-    
-    2.2 README.txt that describes which python file has been added/modified.
-
-3. Models
-
-    3.1 Model checkpoint (i.e., pytorch_model.bin)
-    
-    <!-- 3.2 Model training log (log.txt) -->
-
-4. Generated results on the test set. Please submit the predicted answer for each question in a single file (i.e., predictions_.json) 
-
-If your student id is 12345, then the file should be organized as follows:
-
-        12345.zip
-        |-report.pdf
-        |-BERTQA
-        |   |-README.md
-        |   |-your code
-        |-log
-        |   |-pytorch_model.bin
-        |-results
-        |   |-predictions_.json
-
-
-### 3.6 When to submit?
-
-The deadline is Apr 7 (Fri).
-
-Late submission policy:
-
-10% for late assignments submitted within 1 day late. 
-
-20% for late assignments submitted within 2 days late.
-
-50% for late assignments submitted within 7 days late.
-
-100% for late assignments submitted after 7 days late.
-
-### 3.7 Need More Support?
-
-For any questions about the assignment which potentially are common to all students, your shall first look for related resources as follows,
-- We encourage you to use [GitHub Issues](https://github.com/ilnehc96/HKU-DASC7606-A2/issues) of this repository.
-- Or if you prefer online doc: [Discussion doc](https://connecthkuhk-my.sharepoint.com/:w:/g/personal/ilnehc_connect_hku_hk/EXP4PuxeMPZFtuZwbhkltLcBd55Un8CENtFojxV60JU-Gw?e=AapZoz).
-
-For any other private questions, please contact Li Chen (ilnehc@connect.hku.hk) and Xueliang Zhao (xlzhao22@connect.hku.hk) via email.
-
-## 4 Marking Scheme:
-
-Marks will be given based on the performance that you achieve on the test and the submitted report file. TAs will perform an evaluation of the predicted answers.
-
-The marking scheme has two parts, (1) the performance ranking based on F1 and EM (70% marks) and (2) the final report (30% marks):
-
-1. For the performance part (70%), the mark will be given based on the performance (0.5 * EM + 0.5 * F1) of your model:
-
-    (1) 0.5 * EM + 0.5 * F1 larger than 76 will get the full mark of this part.
-
-    (2) 0.5 * EM + 0.5 * F1 between 72-76 will get 90% mark of this part.
-    
-    (3) 0.5 * EM + 0.5 * F1 between 68-72 will get 80% mark of this part.
-    
-    (4) 0.5 * EM + 0.5 * F1 between 64-68 will get 70% mark of this part.
-    
-    (5) 0.5 * EM + 0.5 * F1 between 60-64 will get 60% mark of this part.
-    
-    (6) 0.5 * EM + 0.5 * F1 larger than 10 will get 50% mark of this part.
-    
-    (7) Others will get 0% mark.
-
-
-2. For the final report part (30%): The marks will be given mainly based on the richness of the experiments & analysis.
-
-    (1) Rich experiments + detailed analysis: 90%-100% mark of this part.
-    
-    (2) Reasonable number of experiments + analysis: 70%-80% mark of this part.
-    
-    (3) Basic analysis: 50%-60% mark of this part.
-    
-    (4) Not sufficient analysis: lower than 50%.
-
-
-## Reference
-
-1. Dive Into Deep Learning https://d2l.ai/chapter_natural-language-processing-pretraining/bert.html
-2. SpanBERT paper https://aclanthology.org/2020.tacl-1.5/
-3. Lil's log https://lilianweng.github.io/posts/2020-10-29-odqa/
-4. Jay Alammar's blog https://jalammar.github.io/illustrated-bert/
-
+BERT and ALBERT showed promising results, while BERT-SQuAD2, though achieving high scores, was discouraged for ethical reasons. The experiments provided insights into each model's strengths and weaknesses, guiding our selection for the task. These results highlight the importance of careful selection and experimentation in achieving optimal performance in NLP tasks.
