@@ -43,10 +43,18 @@ The Stanford Question Answering Dataset (SQuAD) 2.0 expands the original SQuAD d
 | Training   | 398      | 17,187     | 116,409   | 43.18                             | 6.77                                |
 | Validation | 44       | 1,848      | 13,910    | 42.00                             | 7.53                                |
 | Test       | 35       | 1,204      | 11,873    | 34.40                             | 9.86                                |
-
+<p align="center">
+  Table 1. Dataset statistics.
+</p>
 To better understand the distribution of paragraphs and questions within the dataset, we use the training set as an example and display the data in a histogram:
 
-
+<!-- ![image](resources/image.png) -->
+<div align="center">
+  <img src="/data_statistics.png" height="300">
+</div>
+<p align="center">
+  Figure 1. Distribution of Paragraphs per Article and Questions per Paragraph in the Training Set.
+</p>
 
 
 The histogram illustrates that the majority of articles contain between 20 and 60 paragraphs, with each paragraph typically having between 1 and 10 questions.
